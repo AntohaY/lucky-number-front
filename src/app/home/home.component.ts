@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, NgModule, OnInit, ViewC
 import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -16,15 +17,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
     <ion-content>
       <div class="ion-justify-content-center form-container">
         <form class="form" [formGroup]="myForm" (ngSubmit)="handleSubmit()">
-          <input formControlName="guess" type="number" />
+          <input formControlName="guess" type="text" placeholder="Guess the number from 1 to 100" />
           <ion-button type="submit">Submit</ion-button>
         </form>
       </div>
       <div class='result'>
-        {{ result }}
+        {{ result$ | async}}
       </div>
 
-      <ion-list *ngFor="let guess of previousGuesses">
+      <ion-list *ngFor="let guess of previousGuesses$ | async">
         <ion-label>Your previous guesses</ion-label>
         <ion-item>
           <ion-label>{{guess}}</ion-label>
@@ -60,18 +61,18 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 export class HomeComponent implements OnInit {
   constructor(private http: HttpClient, private fb: FormBuilder) {}
 
-  previousGuesses: Array<any> = [];
-  result: string = 'Guess the number from 1 to 100';
+  previousGuesses$ = new BehaviorSubject<any[]>([]);
+  result$ = new BehaviorSubject<any>('');
   myForm = this.fb.group({
     guess: ['', Validators.required],
   })
 
   handleSubmit() {
-    this.previousGuesses.push(this.myForm.value.guess);
+    this.previousGuesses$.next([...this.previousGuesses$.getValue(), ...[this.myForm.value.guess]]);
 
     this.http.post('http://localhost:3000/', this.myForm.value).subscribe((res: any) => {
       if (res) {
-        this.result = res.result;
+        this.result$.next(res.result);
       }
     });
 
