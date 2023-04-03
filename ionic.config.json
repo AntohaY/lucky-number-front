@@ -1,0 +1,7 @@
+{
+  "name": "lucky-number-front",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
